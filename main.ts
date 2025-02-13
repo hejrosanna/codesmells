@@ -3,134 +3,134 @@
   Funktionen tar emot en lista med längshoppslängder och syftet med funktionen är att summera
   dessa hopplängder.
   */
- 
-  function getLength(jumpings: number[]): number {
-    let totalNumber = 0;
+
+  function getTotalJumpLength(jumps: number[]): number {
+    return jumps.reduce((sum, jump) => sum + jump, 0);
+  }  
   
-    totalNumber = jumpings.reduce(
-      (jumpDistanceSoFar, currentJump) => jumpDistanceSoFar + currentJump
-    );
-  
-    return totalNumber;
-  }
-  
-  class Student {
-    constructor(
-      public name: string,
-      public handedInOnTime: boolean,
-      public passed: boolean
-    ) {}
-  }
-  
-  function getStudentStatus(student: Student): string {
-    student.passed =
-      student.name == "Sebastian"
-        ? student.handedInOnTime
-          ? true
-          : false
-        : false;
-  
-    if (student.passed) {
-      return "VG";
-    } else {
-      return "IG";
+  /*
+    2. I detta exempel har vi fokuserat på if-statements. Se om du kan göra exemplet bättre!
+    */
+
+    class Student {
+      constructor(
+        public name: string,
+        public handedInOnTime: boolean,
+        public passed: boolean = false
+      ) {}
     }
-  }
+    
+    function getStudentStatus(student: Student): string {
+      const passed = isEligibleForVG(student);
+      return passed ? "VG" : "IG";
+    }
+    
+    function isEligibleForVG(student: Student): boolean {
+      return student.name === "Sebastian" && student.handedInOnTime;
+    }
   
   /*
     3. Variabelnamn är viktiga. Kika igenom följande kod och gör om och rätt.
     Det finns flera code smells att identifiera här. Vissa är lurigare än andra.
     */
   
-  class Temp {
-    constructor(public q: string, public where: Date, public v: number) {}
-  }
-  
-  function averageWeeklyTemperature(heights: Temp[]) {
-    let r = 0;
-  
-    for (let who = 0; who < heights.length; who++) {
-      if (heights[who].q === "Stockholm") {
-        if (heights[who].where.getTime() > Date.now() - 604800000) {
-          r += heights[who].v;
-        }
-      }
+    class TemperatureRecord {
+      constructor(public city: string, public date: Date, public temperature: number) {}
     }
-  
-    return r / 7;
-  }
+    
+    function averageWeeklyTemperature(records: TemperatureRecord[]): number {
+      const oneWeekTimestamp = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const recentTemperatures = records
+        .filter(record => record.city === "Stockholm" && record.date.getTime() > oneWeekTimestamp)
+        .map(record => record.temperature);
+    
+      return recentTemperatures.length === 0 ? 0 : calculateAverage(recentTemperatures);
+    }
+    
+    function calculateAverage(temperatures: number[]): number {
+      return temperatures.reduce((sum, temp) => sum + temp, 0) / temperatures.length;
+    }    
   
   /*
     4. Följande funktion kommer att presentera ett objekt i dom:en. 
     Se om du kan göra det bättre. Inte bara presentationen räknas, även strukturer.
     */
   
-  function showProduct(
-    name: string,
-    price: number,
-    amount: number,
-    description: string,
-    image: string,
-    parent: HTMLElement
-  ) {
-    let container = document.createElement("div");
-    let title = document.createElement("h4");
-    let pris = document.createElement("strong");
-    let imageTag = document.createElement("img");
-  
-    title.innerHTML = name;
-    pris.innerHTML = price.toString();
-    imageTag.src = image;
-  
-    container.appendChild(title);
-    container.appendChild(imageTag);
-    container.appendChild(pris);
-    parent.appendChild(container);
-  }
+    class Product {
+      constructor(
+        public name: string,
+        public price: number,
+        public image: string
+      ) {}
+    
+      createProductElement(): HTMLElement {
+        const container = document.createElement("div");
+    
+        const productName = document.createElement("h4");
+        productName.textContent = this.name;
+    
+        const productImage = document.createElement("img");
+        productImage.src = this.image;
+    
+        const productPrice = document.createElement("strong");
+        productPrice.textContent = this.price.toString();
+    
+        container.append(productName, productImage, productPrice);
+    
+        return container;
+      }
+    }
+    
+    function showProduct(
+      name: string,
+      price: number,
+      amount: number,
+      description: string,
+      image: string,
+      parent: HTMLElement
+    ) {
+      const product = new Product(name, price, image);
+      parent.appendChild(product.createProductElement());
+    }       
   
   /*
     5. Följande funktion kommer presentera studenter. Men det finns ett antal saker som 
     går att göra betydligt bättre. Gör om så många som du kan hitta!
     */
-  function presentStudents(students: Student[]) {
-    for (const student of students) {
-      if (student.handedInOnTime) {
-        let container = document.createElement("div");
-        let checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = true;
-  
-        container.appendChild(checkbox);
-        let listOfStudents = document.querySelector("ul#passedstudents");
-        listOfStudents?.appendChild(container);
-      } else {
-        let container = document.createElement("div");
-        let checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = false;
-  
-        container.appendChild(checkbox);
-        let listOfStudents = document.querySelector("ul#failedstudents");
-        listOfStudents?.appendChild(container);
-      }
+
+    function createStudentCheckbox(isChecked: boolean): HTMLElement {
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = isChecked;
+      return checkbox;
     }
-  }
-  
+    
+    function presentStudents(students: Student[]): void {
+      students.forEach(student => {
+        const container = document.createElement("div");
+        const studentCheckbox = createStudentCheckbox(student.handedInOnTime);
+        container.appendChild(studentCheckbox);
+    
+        appendToList(student.handedInOnTime, container);
+      });
+    }
+    
+    function appendToList(isPassed: boolean, container: HTMLElement): void {
+      const listSelector = isPassed ? "ul#passedstudents" : "ul#failedstudents";
+      const list = document.querySelector(listSelector);
+      list?.appendChild(container);
+    }      
+
   /*
     6. Skriv en funktion som skall slå ihop följande texter på ett bra sätt:
     Lorem, ipsum, dolor, sit, amet
     Exemplet under löser problemet, men inte speciellt bra. Hur kan man göra istället?
     */
-  function concatenateStrings() {
-    let result = "";
-    result += "Lorem";
-    result += "ipsum";
-    result += "dolor";
-    result += "sit";
-    result += "amet";
-  
-    return result;
-  }
+
+    function concatenateStrings(): string {
+      const words = ["Lorem", "ipsum", "dolor", "sit", "amet"];
+      return words.join(" ");
+    }    
   
   /* 
   7. Denna funktion skall kontrollera att en användare är över 20 år och göra någonting.
@@ -138,24 +138,31 @@
       fler och fler parametrar behöver läggas till? T.ex. avatar eller adress. Hitta en bättre
       lösning som är hållbar och skalar bättre. 
   */
-  function createUser(
-    name: string,
-    birthday: Date,
-    email: string,
-    password: string
-  ) {
-    // Validation
-  
-    let ageDiff = Date.now() - birthday.getTime();
-    let ageDate = new Date(ageDiff);
-    let userAge = Math.abs(ageDate.getUTCFullYear() - 1970);
-  
-    console.log(userAge);
-  
-    if (!(userAge < 20)) {
-      // Logik för att skapa en användare
-    } else {
-      return "Du är under 20 år";
-    }
-  }
+
+      interface User {
+        name: string;
+        birthday: Date;
+        email: string;
+        password: string;
+        avatar?: string;
+        address?: string;
+      }
+      
+      function isUserEligibleForRegistration(user: User): boolean {
+        const age = calculateAge(user.birthday);
+        return age >= 20;
+      }
+      
+      function calculateAge(birthday: Date): number {
+        const ageDifMs = Date.now() - birthday.getTime();
+        const ageDate = new Date(ageDifMs); 
+        return Math.abs(ageDate.getUTCFullYear() - 1970);
+      }
+      
+      function createUser(user: User): string | void {
+        if (!isUserEligibleForRegistration(user)) {
+          return "Du är under 20 år";
+        }
+        // Logik för att skapa användaren
+      }      
   
